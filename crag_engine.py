@@ -2,12 +2,17 @@ import os
 import chromadb
 import ollama
 from groq import Groq
+from dotenv import load_dotenv
 
-# Initialize Groq Client
-GROQ_API_KEY = "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"  
+load_dotenv()
+
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+
+if not GROQ_API_KEY:
+    raise ValueError("GROQ_API_KEY not found! Please check your .env file.")
+
 groq_client = Groq(api_key=GROQ_API_KEY)
 
-# Connect to local ChromaDB
 chroma_client = chromadb.PersistentClient(path="./chroma_db")
 collection = chroma_client.get_or_create_collection(name="local_docs_crag")
 
@@ -30,7 +35,6 @@ def answer_with_validation(user_query: str):
 
     print(f"Retrieved {len(retrieved_docs)} raw chunks from local storage.")
 
-    # Step B: Evaluation Gate via Groq (GPT-OSS 20B)
     valid_contexts = []
     
     for i, doc in enumerate(retrieved_docs):
@@ -55,12 +59,10 @@ Does the document contain useful or related details? Answer strictly with ONLY '
         if "yes" in verdict or "true" in verdict:
             valid_contexts.append(doc)
 
-    # Step C: Conditional Routing
     if not valid_contexts:
         print("⚠️ Warning: Retrieved documents failed the relevance gate. Triggering fallback response.")
         return "I found some documents in storage, but none of them appeared relevant enough to accurately answer your question."
 
-    # Step D: Safe Generation via Groq
     print("✅ Context verified. Generating final response...")
     context_block = "\n\n".join(valid_contexts)
     
