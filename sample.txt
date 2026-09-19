@@ -1,1 +1,0 @@
-Project Beta uses PostgreSQL database and React frontend framework.

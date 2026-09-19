@@ -1,12 +1,18 @@
-import chromadb
+from crag_engine import CHROMA_PATH, COLLECTION_NAME, get_collection
 
-# Connect to the local database folder
-chroma_client = chromadb.PersistentClient(path="./chroma_db")
-collection = chroma_client.get_collection(name="local_docs_crag")
+collection = get_collection()
+data = collection.get(include=["documents", "metadatas"])
 
-# Retrieve all stored documents and IDs
-data = collection.get()
+print(f"ChromaDB: {CHROMA_PATH}")
+print(f"Collection: {COLLECTION_NAME}")
+print(f"Total chunks: {collection.count()}")
+print("\n--- Stored Documents ---")
 
-print("--- Stored Documents in chroma_db ---")
-for doc_id, doc_text in zip(data["ids"], data["documents"]):
-    print(f"ID: {doc_id} | Text: {doc_text}")
+for idx, doc_id in enumerate(data.get("ids") or []):
+    docs = data.get("documents") or []
+    metas = data.get("metadatas") or []
+    doc = docs[idx] if idx < len(docs) else ""
+    meta = metas[idx] if idx < len(metas) else {}
+    print(f"\nID: {doc_id}")
+    print(f"Metadata: {meta}")
+    print(f"Text: {doc}")
